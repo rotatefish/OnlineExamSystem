@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+import "proto/db.proto";
+package api;
+
+message EmptyReq {}
+message EmptyResp {}
+message ErrorResp {
+    string err_msg = 1;
+}
+
+// --- choice question ---
+message CreateChoiceQuestionReq {
+    string description = 1; // 题目描述
+    string answser = 2; // 答案
+    string option_a = 3;
+    string option_b = 4;
+    string option_c = 5;
+    string option_d = 6;
+}
+
+message CreateChoiceQuestionResp {
+    db.ChoiceQuestion choice_question = 1;
+}
+
+message GetChoiceQuestionReq {
+    int32 id = 1;
+}
+
+message GetChoiceQuestionResp {
+    db.ChoiceQuestion choice_question = 1;
+}
+
+
+message ListChoiceQuestionReq {
+    repeated int32 question_id_list = 1;
+}
+
+message ListChoiceQuestionResp {
+    map<int32, db.ChoiceQuestion> choice_questions = 1;
+}
+
+// --- judge question ---
+message CreateJudgeQuestionReq {
+    string description = 1;
+    bool answser = 2;
+}
+
+message CreateJudgeQuestionResp {
+    db.JudgeQuestion judge_question = 1;
+}
+
+message GetJudgeQuestionReq {
+    int32 id = 1;
+}
+
+message GetJudgeQuestionResp {
+    db.JudgeQuestion judge_question = 1;
+}
+
+// --- exam ---
+message CreateExamPaperReq {
+    string title = 1;
+    repeated int32 judge_id_list = 2;
+    repeated int32 choice_id_list = 3;
+    
+}
+
+message CreateExamPaperResp {
+    db.ExamPaper exam_paper = 1;
+}
+
+message GetExamPaperReq {
+    int32 id = 1;
+}
+
+message GetExamPaperResp {
+    db.ExamPaper exam_paper = 1;
+    repeated db.JudgeQuestion judge_questions = 2;
+    repeated db.ChoiceQuestion choice_questions = 3;
+}
+
+message ListExamPaperReq {
+    repeated int32 exam_id_list = 1;
+}
+
+message ListExamPaperResp {
+    map<int32, db.ExamPaper> exam_papers = 1;
+}

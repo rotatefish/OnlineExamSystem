@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package db;
+
+message User {
+    enum Role {
+        UNKNOWN = 0;
+        ADMIN = 1;
+        STUDENT = 2;
+        TEACHER = 3;
+    }
+    Role role = 1; // 角色
+    string id = 2;  // 学号
+    string name = 3; // 姓名
+}
+
+
+message ChoiceQuestion {
+    int32 id = 1; // 题目ID
+    string description = 2; // 题目描述
+    string answser = 3; // 答案
+    string option_a = 4;
+    string option_b = 5;
+    string option_c = 6;
+    string option_d = 7;
+}
+
+message JudgeQuestion {
+    string id = 1;
+    string description = 2;
+    bool answser = 3;
+}
+
+message ExamPaper {
+    int32 id = 1;
+    string title = 2;
+    repeated int32 choice_id_list = 3;
+    repeated int32 judge_id_list = 4;
+}

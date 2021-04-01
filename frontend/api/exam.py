@@ -40,19 +40,19 @@ def create_exam_paper(req, mongo_client):
            api_pb2.GetExamPaperResp)
 @inject(mongo=True)
 def get_exam_paper(req, mongo_client):
-    err, exam_paper = mongo_client.get_exam_paper_by_id(req.id)
+    err, exam_paper = mongo_client.get_exam_paper_by_id(req.e_id)
     if not err.is_ok():
         return 500, ErrorResp(err_msg="failed to get exam paper, err is {}".format(err))
 
-    err, total, choice_questions = mongo_client.list_choice_questions(
-        list(exam_paper.choice_id_list))
+    filters = {'_id': {'$in': list(exam_paper.choice_id_list)}}
+    err, total, choice_questions = mongo_client.list_choice_questions(filters)
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="failed to get exam paper")
+        return 500, ErrorResp(err_msg="failed to get exam paper, No choice questions")
 
-    err, total, judge_questions = mongo_client.list_judge_questions(
-        list(exam_paper.judge_id_list))
+    filters = {'_id': {'$in': list(exam_paper.judge_id_list)}}
+    err, total, judge_questions = mongo_client.list_judge_questions(filters)
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="failed to get exam paper")
+        return 500, ErrorResp(err_msg="failed to get exam paper,  No judge questions")
 
     return 200, api_pb2.GetExamPaperResp(
         exam_paper=exam_paper,

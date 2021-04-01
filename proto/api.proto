@@ -11,12 +11,11 @@ message ErrorResp {
 
 // --- choice question ---
 message CreateChoiceQuestionReq {
-    string description = 1; // 题目描述
-    string answser = 2; // 答案
-    string option_a = 3;
-    string option_b = 4;
-    string option_c = 5;
-    string option_d = 6;
+    db.ChoiceQuestion.Type type = 1;
+    string description = 2;
+    db.ChoiceQuestion.Option single_answser = 3; // 单选答案
+    repeated db.ChoiceQuestion.Option multiple_answser = 4; // 多选答案
+    repeated db.ChoiceQuestion.Content contents = 5; // 题目内容
 }
 
 message CreateChoiceQuestionResp {
@@ -24,20 +23,26 @@ message CreateChoiceQuestionResp {
 }
 
 message GetChoiceQuestionReq {
-    int32 id = 1;
+    int32 q_id = 1;
 }
 
 message GetChoiceQuestionResp {
     db.ChoiceQuestion choice_question = 1;
 }
 
-
 message ListChoiceQuestionReq {
-    repeated int32 question_id_list = 1;
+    message Filters {
+        int32 q_id = 1;
+        string description = 2;
+    }
+    int32 current = 1;
+    int32 page_size = 2;
+    Filters filters = 3;
 }
 
 message ListChoiceQuestionResp {
-    map<int32, db.ChoiceQuestion> choice_questions = 1;
+    int32 total = 1;
+    repeated db.ChoiceQuestion data = 2;
 }
 
 // --- judge question ---
@@ -51,11 +56,26 @@ message CreateJudgeQuestionResp {
 }
 
 message GetJudgeQuestionReq {
-    int32 id = 1;
+    int32 q_id = 1;
 }
 
 message GetJudgeQuestionResp {
     db.JudgeQuestion judge_question = 1;
+}
+
+message ListJudgeQuestionReq {
+    message Filters {
+        int32 q_id = 1;
+        string description = 2;
+    }
+    int32 current = 1;
+    int32 page_size = 2;
+    Filters filters = 3;
+}
+
+message ListJudgeQuestionResp {
+    int32 total = 1;
+    repeated db.JudgeQuestion data = 2;
 }
 
 // --- exam ---
@@ -63,7 +83,6 @@ message CreateExamPaperReq {
     string title = 1;
     repeated int32 judge_id_list = 2;
     repeated int32 choice_id_list = 3;
-    
 }
 
 message CreateExamPaperResp {
@@ -71,7 +90,7 @@ message CreateExamPaperResp {
 }
 
 message GetExamPaperReq {
-    int32 id = 1;
+    int32 e_id = 1;
 }
 
 message GetExamPaperResp {

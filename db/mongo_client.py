@@ -16,9 +16,9 @@ MIN_POOL_SIZE = 10
 MAX_POOL_SIZE = 50
 
 
-CHOICE_QUESTION_PRIMARY_KEY = 'id'
-JUDGE_QUESTION_PRIMARY_KEY = 'id'
-EXAM_PAPER_PRIMARY_KEY = 'id'
+CHOICE_QUESTION_PRIMARY_KEY = 'q_id'
+JUDGE_QUESTION_PRIMARY_KEY = 'q_id'
+EXAM_PAPER_PRIMARY_KEY = 'e_id'
 
 MONGO_CONF = {
     'host': '127.0.0.1',
@@ -82,19 +82,14 @@ class MyMongoClient(object):
         if not err.is_ok():
             return err, None
 
-        choice_question.id = total + 1
+        choice_question.q_id = total + 1
 
         return helper.insert_one(self.choice_question_collection,
                                  db_pb2.ChoiceQuestion,
                                  choice_question,
                                  CHOICE_QUESTION_PRIMARY_KEY)
 
-    def list_choice_questions(self, id_list=None, offset=None, limit=None):
-        filter_list = []
-        if id_list:
-            filter_list = [{'_id': {'$in': id_list}}]
-
-        filters = {'$and': filter_list} if len(filter_list) else None
+    def list_choice_questions(self, filters=None, offset=None, limit=None):
         return helper.get_multiple(self.choice_question_collection,
                                    cls=db_pb2.ChoiceQuestion,
                                    filters=filters,
@@ -125,19 +120,15 @@ class MyMongoClient(object):
         if not err.is_ok():
             return err, None
 
-        judge_question.id = total + 1
+        judge_question.q_id = total + 1
 
         return helper.insert_one(self.judge_question_collection,
                                  db_pb2.JudgeQuestion,
                                  judge_question,
                                  JUDGE_QUESTION_PRIMARY_KEY)
 
-    def list_judge_questions(self, id_list=None, offset=None, limit=None):
-        filter_list = []
-        if id_list:
-            filter_list = [{'_id': {'$in': id_list}}]
+    def list_judge_questions(self, filters=None, offset=None, limit=None):
 
-        filters = {'$and': filter_list} if len(filter_list) else None
         return helper.get_multiple(self.judge_question_collection,
                                    cls=db_pb2.JudgeQuestion,
                                    filters=filters,
@@ -166,7 +157,7 @@ class MyMongoClient(object):
         if not err.is_ok():
             return err, None
 
-        exam_paper.id = total + 1
+        exam_paper.e_id = total + 1
 
         return helper.insert_one(self.exam_paper_collection,
                                  db_pb2.ExamPaper,

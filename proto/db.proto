@@ -16,23 +16,39 @@ message User {
 
 
 message ChoiceQuestion {
-    int32 id = 1; // 题目ID
-    string description = 2; // 题目描述
-    string answser = 3; // 答案
-    string option_a = 4;
-    string option_b = 5;
-    string option_c = 6;
-    string option_d = 7;
+    enum Type {
+        NONE = 0;
+        SINGLE = 1;
+        MULTIPLE = 2;
+    }
+    enum Option {
+        UNKNOWN = 0;
+        A = 1;
+        B = 2;
+        C = 3;
+        D = 4;
+        E = 5;
+    }
+    message Content {
+        Option option = 1;
+        string data = 2;
+    }
+    int32 q_id = 1; // 题目ID
+    Type type = 2; // 题目类型
+    string description = 3; // 题目描述
+    Option single_answser = 4; // 单选答案
+    repeated Option multiple_answser = 5; // 多选答案
+    repeated Content contents = 6; // 题目内容
 }
 
 message JudgeQuestion {
-    string id = 1;
+    int32 q_id = 1;
     string description = 2;
     bool answser = 3;
 }
 
 message ExamPaper {
-    int32 id = 1;
+    int32 e_id = 1;
     string title = 2;
     repeated int32 choice_id_list = 3;
     repeated int32 judge_id_list = 4;

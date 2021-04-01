@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 from flask import Blueprint, session, request
 from google.protobuf import json_format
@@ -14,24 +15,25 @@ from api.decorators import api_proto, inject
 question = Blueprint('question', __name__)
 
 
-@question.route('/question/choice_question/create', methods=['GET', 'POST'])
+@question.route('/question/choice_question/create', methods=['POST'])
 @api_proto(api_pb2.CreateChoiceQuestionReq,
            api_pb2.CreateChoiceQuestionResp)
 @inject(mongo=True)
 def create_choice_question(req, mongo_client):
-    question = db_pb2.ChoiceQuestion()
-    question.description = req.description
-    question.answser = req.answser
-    question.option_a = req.option_a
-    question.option_b = req.option_b
-    question.option_c = req.option_c
-    question.option_d = req.option_d
+    q = db_pb2.ChoiceQuestion()
+    q.type = req.type
+    q.description = req.description
+    q.single_answser = req.single_answser
+    for answser in req.multiple_answser:
+        q.multiple_answser.append(answser)
+    for content in req.contents:
+        q.contents.append(content)
 
-    err, question = mongo_client.create_choice_question(question)
+    err, q = mongo_client.create_choice_question(q)
     if not err.is_ok():
         return 500, api_pb2.ErrorResp(err_msg=str(err))
 
-    return 200, api_pb2.CreateChoiceQuestionResp(choice_question=question)
+    return 200, api_pb2.CreateChoiceQuestionResp(choice_question=q)
 
 
 @question.route('/question/choice_question/get', methods=['GET', 'POST'])
@@ -39,34 +41,42 @@ def create_choice_question(req, mongo_client):
            api_pb2.GetChoiceQuestionResp)
 @inject(mongo=True)
 def get_choice_question(req, mongo_client):
-    err, question = mongo_client.get_choice_question_by_id(req.id)
+    err, question = mongo_client.get_choice_question_by_id(req.q_id)
     if not err.is_ok():
         return 500, api_pb2.ErrorResp(err_msg=str(err))
 
     return 200, api_pb2.GetChoiceQuestionResp(choice_question=question)
 
 
-@question.route('/question/choice_question/list', methods=['GET', "POST"])
+@question.route('/question/choice_question/list', methods=['GET', 'POST'])
 @api_proto(api_pb2.ListChoiceQuestionReq,
            api_pb2.ListChoiceQuestionResp)
 @inject(mongo=True)
 def list_choice_questions(req, mongo_client):
-    id_list = list(req.question_id_list)
-    err, total, questions = mongo_client.list_choice_questions(id_list)
+    limit = 10 if req.page_size < 1 or req.page_size > 100 else req.page_size
+    offset = ((1 if req.current < 1 else req.current) - 1) * limit
+
+    filter_list = []
+    if req.filters:
+        req_filters = req.filters
+        if req_filters.id:
+            filter_list.append({'_id': req_filters.q_id})
+        if req_filters.description:
+            pattern = re.compile('.*{}.*'.format(req_filters.description))
+            filter_list.append({'description': pattern})
+    filters = {'$and': filter_list} if len(filter_list) else None
+
+    err, total, questions = mongo_client.list_choice_questions(
+        filters=filters,
+        offset=offset,
+        limit=limit)
 
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="debug")
+        return 500, ErrorResp(err_msg="Failed to get choice question list")
 
-    results = {}
-    for q in questions:
-        q_id = q.id
-        results[q_id] = json_format.MessageToDict(q)
-    resp_dict = {
-        "choice_questions": results
-    }
-    resp = api_pb2.ListChoiceQuestionResp()
-    json_format.ParseDict(resp_dict, resp)
-    return 200, resp
+    return 200, api_pb2.ListChoiceQuestionResp(
+        total=total,
+        data=questions)
 
 
 @question.route('/question/judge_question/create', methods=['POST'])
@@ -85,13 +95,44 @@ def create_judge_question(req, mongo_client):
     return 200, api_pb2.CreateJudgeQuestionResp(judge_question=question)
 
 
-@question.route('/question/judge_question/get', methods=['POST'])
+@question.route('/question/judge_question/get', methods=['GET', 'POST'])
 @api_proto(api_pb2.GetJudgeQuestionReq,
            api_pb2.GetJudgeQuestionResp)
 @inject(mongo=True)
 def get_judge_question(req, mongo_client):
-    err, question = mongo_client.get_judge_question_by_id(req.id)
+    err, question = mongo_client.get_judge_question_by_id(req.q_id)
     if not err.is_ok():
         return 500, api_pb2.ErrorResp(err_msg=str(err))
 
     return 200, api_pb2.GetJudgeQuestionResp(judge_question=question)
+
+
+@question.route('/question/judge_question/list', methods=['GET', 'POST'])
+@api_proto(api_pb2.ListJudgeQuestionReq,
+            api_pb2.ListJudgeQuestionResp)
+@inject(mongo=True)
+def list_judge_question(req, mongo_client):
+    limit = 10 if req.page_size < 1 or req.page_size > 100 else req.page_size
+    offset = ((1 if req.current < 1 else req.current) - 1) * limit
+
+    filter_list = []
+    if req.filters:
+        req_filters = req.filters
+        if req_filters.id:
+            filter_list.append({'_id': req_filters.q_id})
+        if req_filters.description:
+            pattern = re.compile('.*{}.*'.format(req_filters.description))
+            filter_list.append({'description': pattern})
+    filters = {'$and': filter_list} if len(filter_list) else None
+
+    err, total, questions = mongo_client.list_judge_questions(
+        filters=filters,
+        offset=offset,
+        limit=limit)
+
+    if not err.is_ok():
+        return 500, ErrorResp(err_msg="Failed to get judge question list")
+
+    return 200, api_pb2.ListJudgeQuestionResp(
+        total=total,
+        data=questions)

@@ -58,8 +58,21 @@ export default [
               {
                 path: '/question',
                 name: 'question',
-                icon: 'smile',
-                component: './Question',
+                icon: 'crown',
+                routes: [
+                  {
+                    name: 'list',
+                    icon: 'smile',
+                    path: '/question/list',
+                    component: './Question/List',
+                  },
+                  {
+                    name: 'create',
+                    icon: 'smile',
+                    path: '/question/create',
+                    component: './Question/Create',
+                  },
+                ],
               },
               {
                 component: './404',

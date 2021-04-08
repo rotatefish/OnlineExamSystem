@@ -2,6 +2,7 @@ import json
 import os
 import re
 
+from http import HTTPStatus
 from flask import Blueprint, session, request
 from google.protobuf import json_format
 from pprint import pprint
@@ -31,9 +32,9 @@ def create_choice_question(req, mongo_client):
 
     err, q = mongo_client.create_choice_question(q)
     if not err.is_ok():
-        return 500, api_pb2.ErrorResp(err_msg=str(err))
+        return HTTPStatus.BAD_REQUEST, api_pb2.ErrorResp(err_msg=str(err))
 
-    return 200, api_pb2.CreateChoiceQuestionResp(choice_question=q)
+    return HTTPStatus.OK, api_pb2.CreateChoiceQuestionResp(choice_question=q)
 
 
 @question.route('/question/choice_question/get', methods=['GET', 'POST'])
@@ -43,9 +44,9 @@ def create_choice_question(req, mongo_client):
 def get_choice_question(req, mongo_client):
     err, question = mongo_client.get_choice_question_by_id(req.q_id)
     if not err.is_ok():
-        return 500, api_pb2.ErrorResp(err_msg=str(err))
+        return HTTPStatus.BAD_REQUEST, api_pb2.ErrorResp(err_msg=str(err))
 
-    return 200, api_pb2.GetChoiceQuestionResp(choice_question=question)
+    return HTTPStatus.OK, api_pb2.GetChoiceQuestionResp(choice_question=question)
 
 
 @question.route('/question/choice_question/list', methods=['GET', 'POST'])
@@ -59,7 +60,7 @@ def list_choice_questions(req, mongo_client):
     filter_list = []
     if req.filters:
         req_filters = req.filters
-        if req_filters.id:
+        if req_filters.q_id:
             filter_list.append({'_id': req_filters.q_id})
         if req_filters.description:
             pattern = re.compile('.*{}.*'.format(req_filters.description))
@@ -72,9 +73,9 @@ def list_choice_questions(req, mongo_client):
         limit=limit)
 
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="Failed to get choice question list")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="Failed to get choice question list")
 
-    return 200, api_pb2.ListChoiceQuestionResp(
+    return HTTPStatus.OK, api_pb2.ListChoiceQuestionResp(
         total=total,
         data=questions)
 
@@ -90,9 +91,9 @@ def create_judge_question(req, mongo_client):
 
     err, question = mongo_client.create_judge_question(question)
     if not err.is_ok():
-        return 500, api_pb2.ErrorResp(err_msg=str(err))
+        return HTTPStatus.BAD_REQUEST, api_pb2.ErrorResp(err_msg=str(err))
 
-    return 200, api_pb2.CreateJudgeQuestionResp(judge_question=question)
+    return HTTPStatus.OK, api_pb2.CreateJudgeQuestionResp(judge_question=question)
 
 
 @question.route('/question/judge_question/get', methods=['GET', 'POST'])
@@ -102,14 +103,14 @@ def create_judge_question(req, mongo_client):
 def get_judge_question(req, mongo_client):
     err, question = mongo_client.get_judge_question_by_id(req.q_id)
     if not err.is_ok():
-        return 500, api_pb2.ErrorResp(err_msg=str(err))
+        return HTTPStatus.BAD_REQUEST, api_pb2.ErrorResp(err_msg=str(err))
 
-    return 200, api_pb2.GetJudgeQuestionResp(judge_question=question)
+    return HTTPStatus.OK, api_pb2.GetJudgeQuestionResp(judge_question=question)
 
 
 @question.route('/question/judge_question/list', methods=['GET', 'POST'])
 @api_proto(api_pb2.ListJudgeQuestionReq,
-            api_pb2.ListJudgeQuestionResp)
+           api_pb2.ListJudgeQuestionResp)
 @inject(mongo=True)
 def list_judge_question(req, mongo_client):
     limit = 10 if req.page_size < 1 or req.page_size > 100 else req.page_size
@@ -131,8 +132,8 @@ def list_judge_question(req, mongo_client):
         limit=limit)
 
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="Failed to get judge question list")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="Failed to get judge question list")
 
-    return 200, api_pb2.ListJudgeQuestionResp(
+    return HTTPStatus.OK, api_pb2.ListJudgeQuestionResp(
         total=total,
         data=questions)

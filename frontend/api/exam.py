@@ -1,6 +1,7 @@
 import json
 import os
 
+from http import HTTPStatus
 from flask import Blueprint, session, request
 from pprint import pprint
 
@@ -30,9 +31,9 @@ def create_exam_paper(req, mongo_client):
 
     err, exam_paper = mongo_client.create_exam_paper(exam_paper)
     if not err.is_ok():
-        return 500, api_pb2.ErrorResp(err_msg=str(err))
+        return HTTPStatus.BAD_REQUEST, api_pb2.ErrorResp(err_msg=str(err))
 
-    return 200, api_pb2.CreateExamPaperResp(exam_paper=exam_paper)
+    return HTTPStatus.OK, api_pb2.CreateExamPaperResp(exam_paper=exam_paper)
 
 
 @exam.route('/exam/exam_paper/get', methods=['POST', 'GET'])
@@ -42,19 +43,19 @@ def create_exam_paper(req, mongo_client):
 def get_exam_paper(req, mongo_client):
     err, exam_paper = mongo_client.get_exam_paper_by_id(req.e_id)
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="failed to get exam paper, err is {}".format(err))
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="failed to get exam paper, err is {}".format(err))
 
     filters = {'_id': {'$in': list(exam_paper.choice_id_list)}}
     err, total, choice_questions = mongo_client.list_choice_questions(filters)
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="failed to get exam paper, No choice questions")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="failed to get exam paper, No choice questions")
 
     filters = {'_id': {'$in': list(exam_paper.judge_id_list)}}
     err, total, judge_questions = mongo_client.list_judge_questions(filters)
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="failed to get exam paper,  No judge questions")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="failed to get exam paper,  No judge questions")
 
-    return 200, api_pb2.GetExamPaperResp(
+    return HTTPStatus.OK, api_pb2.GetExamPaperResp(
         exam_paper=exam_paper,
         judge_questions=judge_questions,
         choice_questions=choice_questions)
@@ -69,7 +70,7 @@ def list_exam_paper(req, mongo_client):
     err, total, exams = mongo_client.list_exam_paper(id_list)
 
     if not err.is_ok():
-        return 500, ErrorResp(err_msg="debug")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="debug")
 
     results = {}
     for exam in exams:
@@ -80,4 +81,4 @@ def list_exam_paper(req, mongo_client):
     }
     resp = api_pb2.ListExamPaperResp()
     json_format.ParseDict(resp_dict, resp)
-    return 200, resp
+    return HTTPStatus.OK, resp

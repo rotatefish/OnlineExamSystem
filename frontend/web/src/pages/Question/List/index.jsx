@@ -11,7 +11,7 @@ import { PlusOutlined } from '@ant-design/icons';
 const columns = [
   {
     title: '题目ID',
-    dataIndex: 'id',
+    dataIndex: 'qId',
     sorter: (a, b) => b - a,
   },
   {
@@ -49,7 +49,7 @@ class QuestionList extends PureComponent {
         current: params.current,
         pageSize: params.pageSize,
         filters: {
-          id: params.id,
+          qId: params.qId,
           description: params.description,
         },
       }

@@ -1,16 +1,18 @@
 import { PageContainer } from '@ant-design/pro-layout';
 import React, { useState, useRef, PureComponent } from 'react';
-import { message, Button } from 'antd';
+import { message, Button, Tag, Tabs } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
 import ProForm, { ModalForm, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
 import { connect, FormattedMessage, Link, history } from 'umi';
 import { PlusOutlined } from '@ant-design/icons';
+import moment from 'moment';
+import ProCard from '@ant-design/pro-card';
 
 
 const columns = [
   {
-    title: '题目ID',
+    title: '题目编号',
     dataIndex: 'qId',
     sorter: (a, b) => b - a,
   },
@@ -19,6 +21,84 @@ const columns = [
     dataIndex: 'description',
     copyable: true,
   },
+  {
+    title: '问题类型',
+    dataIndex: 'type',
+    valueEnum: {
+      UNKNOWN: {
+        text: '全部',
+      },
+      SINGLE: {
+        text: '单选题',
+      },
+      MULTIPLE: {
+        text: '多选题',
+      },
+      JUDGE: {
+        text: '判断题',
+      },
+    },
+  },
+  {
+    title: '问题答案',
+    render: (data, record) => {
+      console.log(record);
+      const type = record.type;
+      if (type === 'SINGLE') {
+        return record.choiceData.singleAnswser;
+      } else if (type === 'MULTIPLE') {
+        return record.choiceData.multipleAnswser;
+      } else if (type === 'JUDGE') {
+        if (record.judgeData.answser) {
+          return 'true';
+        } else {
+          return 'false';
+        }
+      }
+    }
+  },
+  {
+    title: '问题状态',
+    dataIndex: 'status',
+    dataType: 'select',
+    valueEnum: {
+      UNKNOWN: {
+        text: '未知',
+        status: 'Default'
+      },
+      ENABLED: {
+        text: '正常',
+        status: 'Success',
+      },
+      DISABLED: {
+        text: '禁用',
+        status: 'Error',
+      }
+    },
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'creationTime',
+    render: (data, record, index) => {
+      return <span>{moment(new Date(parseInt(data * 1000))).format('YYYY-MM-DD HH:mm:ss')}</span>;
+    }
+  },
+  {
+    title: '创建者',
+    dataIndex: 'createdBy',
+  },
+  {
+    title: '操作',
+    render: (data, record) => {
+      return (
+        <div>
+          <Button type="link">详情</Button>
+          <Button type="link">禁用</Button>
+          <Button type="link">修改</Button>
+        </div>
+      )
+    }
+  }
 ];
 
 @connect(({ question }) => ({
@@ -42,21 +122,22 @@ class QuestionList extends PureComponent {
     // }
   }
 
-  getChoiceQuestionList = (params, sort, filter) => {
+  getQuestionList = (params, sort, filters) => {
+    console.log(params);
     const resp = this.props.dispatch({
-      type: 'question/queryQuestionList',
+      type: 'question/listAllQuestions',
       payload: {
         current: params.current,
         pageSize: params.pageSize,
         filters: {
           qId: params.qId,
+          type: params.type,
           description: params.description,
-        },
-      }
+        }
+      },
     });
     return resp;
   }
-
 
   renderToolBar = () => {
     return [
@@ -64,8 +145,6 @@ class QuestionList extends PureComponent {
         type="primary"
         key="primary"
         onClick={() => {
-          //this.handleCreateModalVisible(true);
-          message.info('创建题目');
           history.push('/question/create');
         }}
       >
@@ -85,33 +164,20 @@ class QuestionList extends PureComponent {
     message.success('添加成功');
   }
 
-  renderPage = () => {
-
+  render() {
     return (
       <PageContainer>
-        <ProTable
-          headerTitle={'选择题列表'}
-          columns={columns}
-          request={(params, sort, filter) => this.getChoiceQuestionList(params, sort, filter)}
-          toolBarRender={() => this.renderToolBar()}
-        >
-
-        </ProTable>
-        <ModalForm
-          title="新建题目"
-          width="800px"
-          visible={this.state.createModalVisible}
-          onVisibleChange={this.handleCreateModalVisible}
-          onFinish={() => this.handleAdd()}
-        >
-        </ModalForm>
+        <ProCard>
+          <ProTable
+            headerTitle={'题目列表'}
+            columns={columns}
+            request={(params, sort, filter) => this.getQuestionList(params, sort, filter)}
+            toolBarRender={() => this.renderToolBar()}
+          >
+          </ProTable>
+        </ProCard>
       </PageContainer>
     );
-  }
-
-  render() {
-    //console.log(this.props.question.data.list[0]);
-    return this.renderPage();
   }
 };
 

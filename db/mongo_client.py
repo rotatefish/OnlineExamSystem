@@ -16,17 +16,15 @@ MIN_POOL_SIZE = 10
 MAX_POOL_SIZE = 50
 
 
-CHOICE_QUESTION_PRIMARY_KEY = 'q_id'
-JUDGE_QUESTION_PRIMARY_KEY = 'q_id'
+QUESTION_PRIMARY_KEY = 'q_id'
 EXAM_PAPER_PRIMARY_KEY = 'e_id'
 
 MONGO_CONF = {
     'host': '127.0.0.1',
     'port': 27017,
     'db_name': 'exam_online',
-    'choice_question_collection': 'choice_question',
-    'judge_question_collection': 'judge_question',
-    'exam_paper_collection': 'exam_paper'
+    'exam_paper_collection': 'exam_paper',
+    'question_collection': 'question',
 }
 
 
@@ -56,85 +54,42 @@ class MyMongoClient(object):
             port=MONGO_CONF['port'])
 
         self.db = self.client[MONGO_CONF['db_name']]
-        self.choice_question_collection = self.db[MONGO_CONF['choice_question_collection']]
-        self.judge_question_collection = self.db[MONGO_CONF['judge_question_collection']]
         self.exam_paper_collection = self.db[MONGO_CONF['exam_paper_collection']]
+        self.question_collection = self.db[MONGO_CONF['question_collection']]
 
-    ########## choice question ##########
-    def get_choice_question_count(self, filters):
+    ########## question ##########
+    def get_question_count(self, filters):
+        return helper.get_count(self.question_collection, filters)
 
-        return helper.get_count(self.choice_question_collection, filters)
-
-    def get_choice_question_by_id(self, choice_question_id):
-        return helper.get_one(self.choice_question_collection,
-                              db_pb2.ChoiceQuestion,
-                              choice_question_id,
-                              CHOICE_QUESTION_PRIMARY_KEY)
-
-    def update_choice_question(self, choice_question):
-        return helper.update_one(self.choice_question_collection,
-                                 db_pb2.ChoiceQuestion,
-                                 choice_question,
-                                 CHOICE_QUESTION_PRIMARY_KEY)
-
-    def create_choice_question(self, choice_question):
-        err, total = self.get_choice_question_count({})
+    def create_question(self, question):
+        err, total = self.get_question_count({})
         if not err.is_ok():
             return err, None
+        question.q_id = total + 1
+        return helper.insert_one(self.question_collection,
+                                 db_pb2.Question,
+                                 question,
+                                 QUESTION_PRIMARY_KEY)
 
-        choice_question.q_id = total + 1
-
-        return helper.insert_one(self.choice_question_collection,
-                                 db_pb2.ChoiceQuestion,
-                                 choice_question,
-                                 CHOICE_QUESTION_PRIMARY_KEY)
-
-    def list_choice_questions(self, filters=None, offset=None, limit=None):
-        return helper.get_multiple(self.choice_question_collection,
-                                   cls=db_pb2.ChoiceQuestion,
+    def list_all_questions(self, filters=None, offset=None, limit=None):
+        return helper.get_multiple(self.question_collection,
+                                   cls=db_pb2.Question,
                                    filters=filters,
                                    offset=offset,
                                    limit=limit,
-                                   primary_key=CHOICE_QUESTION_PRIMARY_KEY)
+                                   primary_key=QUESTION_PRIMARY_KEY)
 
-    ########## judge question ##########
+    def get_question_by_id(self, question_id):
+        return helper.get_one(self.question_collection,
+                              db_pb2.Question,
+                              question_id,
+                              QUESTION_PRIMARY_KEY)
 
-    def get_judge_question_count(self, filters):
-        return helper.get_count(self.judge_question_collection, filters)
-
-    def get_judge_question_by_id(self, judge_question_id):
-        return helper.get_one(self.judge_question_collection,
-                              db_pb2.JudgeQuestion,
-                              judge_question_id,
-                              JUDGE_QUESTION_PRIMARY_KEY)
-
-    def update_judge_question(self, judge_question):
-        return helper.update_one(self.judge_question_collection,
-                                 db_pb2.JudgeQuestion,
-                                 judge_question,
-                                 JUDGE_QUESTION_PRIMARY_KEY)
-
-    def create_judge_question(self, judge_question):
-
-        err, total = self.get_judge_question_count({})
-        if not err.is_ok():
-            return err, None
-
-        judge_question.q_id = total + 1
-
-        return helper.insert_one(self.judge_question_collection,
-                                 db_pb2.JudgeQuestion,
-                                 judge_question,
-                                 JUDGE_QUESTION_PRIMARY_KEY)
-
-    def list_judge_questions(self, filters=None, offset=None, limit=None):
-
-        return helper.get_multiple(self.judge_question_collection,
-                                   cls=db_pb2.JudgeQuestion,
-                                   filters=filters,
-                                   offset=offset,
-                                   limit=limit,
-                                   primary_key=JUDGE_QUESTION_PRIMARY_KEY)
+    def update_question(self, question):
+        return helper.update_one(self.question_collection,
+                                 db_pb2.Question,
+                                 question,
+                                 QUESTION_PRIMARY_KEY)
 
     ########## exam paper ##########
     def get_exam_paper_count(self, filters):

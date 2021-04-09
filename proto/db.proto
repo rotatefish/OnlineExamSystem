@@ -1,6 +1,13 @@
 syntax = "proto3";
 
+
 package db;
+
+enum Status {
+    UNKNOWN = 0;
+    ENABLED = 1;
+    DISABLED = 2;
+}
 
 message User {
     enum Role {
@@ -14,6 +21,24 @@ message User {
     string name = 3; // 姓名
 }
 
+message Question {
+    enum Type {
+        UNKNOWN = 0;
+        JUDGE = 1;
+        SINGLE = 2;
+        MULTIPLE = 3;
+    }
+    string created_by = 1;
+    int32 creation_time = 2;
+    int32 modified_time = 3;
+
+    int32 q_id = 4;
+    Type type = 5;
+    Status status = 6;
+    string description = 7;
+    ChoiceQuestion choice_data = 8;
+    JudgeQuestion judge_data = 9;
+}
 
 message ChoiceQuestion {
     enum Type {
@@ -39,6 +64,11 @@ message ChoiceQuestion {
     Option single_answser = 4; // 单选答案
     repeated Option multiple_answser = 5; // 多选答案
     repeated Content contents = 6; // 题目内容
+    Status status = 7;
+
+    string created_by = 8;
+    int64 creation_time = 9;
+    int64 modified_time = 10;
 }
 
 message JudgeQuestion {

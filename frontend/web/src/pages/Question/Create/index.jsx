@@ -22,7 +22,7 @@ import ProForm, {
 } from '@ant-design/pro-form';
 import { PageContainer } from '@ant-design/pro-layout';
 import { message } from 'antd';
-import { connect } from 'umi';
+import { connect, history } from 'umi';
 import ProCard from '@ant-design/pro-card';
 
 
@@ -62,34 +62,27 @@ const initSelectList = [
 class CreateChoiceQuestion extends PureComponent {
 
   handleCreate = async (values) => {
-    message.success('开始创建');
-    if (values.questionType === 'JUDGE') {
-      message.info('判断题');
-      const resp = await this.props.dispatch({
-        type: 'question/createJudgeQuestion',
-        payload: {
-          description: values.description,
+
+    const resp = await this.props.dispatch({
+      type: 'question/createQuestion',
+      payload: {
+        type: values.questionType,
+        description: values.description,
+        judgeData: {
           answser: values.judgeAnswser
-        }
-      });
-      if (resp) {
-        message.info('判断题创建成功');
-      }
-    } else {
-      const resp = await this.props.dispatch({
-        type: 'question/createChoiceQuestion',
-        payload: {
-          type: values.questionType,
-          description: values.description,
+        },
+        choiceData: {
           singleAnswser: values.singleAnswser,
           multipleAnswser: values.multipleAnswser,
           contents: values.optionContent
-        }
-      });
-      if (resp) {
-        message.info('创建成功');
+        },
       }
+    });
+    if (resp) {
+      message.success('创建成功');
+      history.push('/question/list');
     }
+
   }
 
   handleTypeChange = value => {

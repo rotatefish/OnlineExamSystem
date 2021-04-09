@@ -1,7 +1,6 @@
 import {
-    queryQuestionList,
-    createChoiceQuestion,
-    createJudgeQuestion,
+    createQuestion,
+    listAllQuestions,
 } from '@/services/services';
 
 
@@ -16,19 +15,16 @@ export default {
     },
 
     effects: {
-        *queryQuestionList({ payload }, { call, put }) {
-            const resp = yield call(queryQuestionList, payload);
+        *listAllQuestions({ payload }, { call, put }) {
+            const resp = yield call(listAllQuestions, payload);
             yield put({
                 type: 'saveQuestionList',
                 payload: resp
             });
             return resp;
         },
-        *createChoiceQuestion({ payload }, { call, put }) {
-            return yield call(createChoiceQuestion, payload);
-        },
-        *createJudgeQuestion({ payload }, { call, put }) {
-            return yield call(createJudgeQuestion, payload);
+        *createQuestion({ payload }, { call, put }) {
+            return yield call(createQuestion, payload);
         },
     },
 

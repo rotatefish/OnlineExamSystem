@@ -1,12 +1,41 @@
 syntax = "proto3";
 
 import "proto/db.proto";
+
 package api;
 
 message EmptyReq {}
 message EmptyResp {}
 message ErrorResp {
     string err_msg = 1;
+}
+
+// --- all question ---
+message CreateAllQuestionReq {
+    db.Question.Type type = 1;
+    string description = 2;
+    db.JudgeQuestion judge_data = 3;
+    db.ChoiceQuestion choice_data = 4;
+}
+
+message CreateAllQuestionResp {
+    db.Question question = 1;
+}
+
+message ListAllQuestionReq {
+    message Filters {
+        int32 q_id = 1;
+        string description = 2;
+        db.Question.Type type = 3;
+    }
+    int32 current = 1;
+    int32 page_size = 2;
+    Filters filters = 3;
+}
+
+message ListAllQuestionResp {
+    int32 total = 1;
+    repeated db.Question data = 2;
 }
 
 // --- choice question ---
@@ -34,6 +63,7 @@ message ListChoiceQuestionReq {
     message Filters {
         int32 q_id = 1;
         string description = 2;
+        db.ChoiceQuestion.Type type = 3;
     }
     int32 current = 1;
     int32 page_size = 2;

@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 from http import HTTPStatus
 from flask import Blueprint, session, request
@@ -21,13 +22,15 @@ exam = Blueprint('exam', __name__)
 def create_exam_paper(req, mongo_client):
     exam_paper = db_pb2.ExamPaper()
     exam_paper.title = req.title
-    #exam_paper.judge_id_list = req.judge_id_list
-    #exam_paper.choice_id_list = req.choice_id_list
-    for q_id in req.judge_id_list:
-        exam_paper.judge_id_list.append(q_id)
 
-    for q_id in req.choice_id_list:
-        exam_paper.choice_id_list.append(q_id)
+    for q_id in req.q_id_list:
+        exam_paper.q_id_list.append(q_id)
+
+    current_time = int(time.time())
+    exam_paper.status = db_pb2.Status.ENABLED
+    exam_paper.created_by = "admin"
+    exam_paper.creation_time = current_time
+    exam_paper.modified_time = current_time
 
     err, exam_paper = mongo_client.create_exam_paper(exam_paper)
     if not err.is_ok():
@@ -45,20 +48,14 @@ def get_exam_paper(req, mongo_client):
     if not err.is_ok():
         return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="failed to get exam paper, err is {}".format(err))
 
-    filters = {'_id': {'$in': list(exam_paper.choice_id_list)}}
-    err, total, choice_questions = mongo_client.list_choice_questions(filters)
+    filters = {'_id': {'$in': list(exam_paper.q_id_list)}}
+    err, total, questions = mongo_client.list_all_questions(filters)
     if not err.is_ok():
         return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="failed to get exam paper, No choice questions")
 
-    filters = {'_id': {'$in': list(exam_paper.judge_id_list)}}
-    err, total, judge_questions = mongo_client.list_judge_questions(filters)
-    if not err.is_ok():
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="failed to get exam paper,  No judge questions")
-
     return HTTPStatus.OK, api_pb2.GetExamPaperResp(
         exam_paper=exam_paper,
-        judge_questions=judge_questions,
-        choice_questions=choice_questions)
+        questions=questions)
 
 
 @exam.route('/exam/exam_paper/list', methods=['GET', 'POST'])
@@ -66,19 +63,28 @@ def get_exam_paper(req, mongo_client):
            api_pb2.ListExamPaperResp)
 @inject(mongo=True)
 def list_exam_paper(req, mongo_client):
-    id_list = list(req.exam_id_list)
-    err, total, exams = mongo_client.list_exam_paper(id_list)
+    limit = 10 if req.page_size < 1 or req.page_size > 100 else req.page_size
+    offset = ((1 if req.current < 1 else req.current) - 1) * limit
+
+    filter_list = []
+    if req.filters:
+        req_filters = req.filters
+        if req_filters.e_id:
+            filter_list.append({'_id': req_filters.e_id})
+        if req_filters.title:
+            pattern = re.compile('.*{}.*'.format(req_filters.title))
+            filter_list.append({'description': pattern})
+
+    filters = {'$and': filter_list} if len(filter_list) else None
+
+    err, total, exam_papers = mongo_client.list_exam_papers(
+        filters=filters,
+        offset=offset,
+        limit=limit)
 
     if not err.is_ok():
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="debug")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="Failed to get judge question list")
 
-    results = {}
-    for exam in exams:
-        exam_id = exam.id
-        results[exam_id] = json_format.MessageToDict(exam)
-    resp_dict = {
-        "exam_papers": results
-    }
-    resp = api_pb2.ListExamPaperResp()
-    json_format.ParseDict(resp_dict, resp)
-    return HTTPStatus.OK, resp
+    return HTTPStatus.OK, api_pb2.ListExamPaperResp(
+        total=total,
+        data=exam_papers)

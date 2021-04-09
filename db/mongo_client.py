@@ -119,12 +119,7 @@ class MyMongoClient(object):
                                  exam_paper,
                                  EXAM_PAPER_PRIMARY_KEY)
 
-    def list_exam_paper(self, id_list=None, offset=None, limit=None):
-        filter_list = []
-        if id_list:
-            filter_list = [{'_id': {'$in': id_list}}]
-
-        filters = {'$and': filter_list} if len(filter_list) else None
+    def list_exam_papers(self, filters=None, offset=None, limit=None):
         return helper.get_multiple(self.exam_paper_collection,
                                    cls=db_pb2.ExamPaper,
                                    filters=filters,

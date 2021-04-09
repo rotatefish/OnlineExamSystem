@@ -36,16 +36,11 @@ message Question {
     Type type = 5;
     Status status = 6;
     string description = 7;
-    ChoiceQuestion choice_data = 8;
-    JudgeQuestion judge_data = 9;
+    ChoiceData choice_data = 8;
+    JudgeData judge_data = 9;
 }
 
-message ChoiceQuestion {
-    enum Type {
-        NONE = 0;
-        SINGLE = 1;
-        MULTIPLE = 2;
-    }
+message ChoiceData {
     enum Option {
         UNKNOWN = 0;
         A = 1;
@@ -58,28 +53,22 @@ message ChoiceQuestion {
         Option option = 1;
         string data = 2;
     }
-    int32 q_id = 1; // 题目ID
-    Type type = 2; // 题目类型
-    string description = 3; // 题目描述
-    Option single_answser = 4; // 单选答案
-    repeated Option multiple_answser = 5; // 多选答案
-    repeated Content contents = 6; // 题目内容
-    Status status = 7;
-
-    string created_by = 8;
-    int64 creation_time = 9;
-    int64 modified_time = 10;
+    Option single_answser = 1; // 单选答案
+    repeated Option multiple_answser = 2; // 多选答案
+    repeated Content contents = 3; // 题目内容
 }
 
-message JudgeQuestion {
-    int32 q_id = 1;
-    string description = 2;
-    bool answser = 3;
+message JudgeData {
+    bool answser = 1;
 }
 
 message ExamPaper {
-    int32 e_id = 1;
-    string title = 2;
-    repeated int32 choice_id_list = 3;
-    repeated int32 judge_id_list = 4;
+    string created_by = 1;
+    int32 creation_time = 2;
+    int32 modified_time = 3;
+
+    int32 e_id = 4;
+    string title = 5;
+    Status status = 6;
+    repeated int32 q_id_list = 7; // 题目列表
 }

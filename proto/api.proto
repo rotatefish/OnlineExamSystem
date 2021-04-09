@@ -14,8 +14,8 @@ message ErrorResp {
 message CreateAllQuestionReq {
     db.Question.Type type = 1;
     string description = 2;
-    db.JudgeQuestion judge_data = 3;
-    db.ChoiceQuestion choice_data = 4;
+    db.JudgeData judge_data = 3;
+    db.ChoiceData choice_data = 4;
 }
 
 message CreateAllQuestionResp {
@@ -38,81 +38,10 @@ message ListAllQuestionResp {
     repeated db.Question data = 2;
 }
 
-// --- choice question ---
-message CreateChoiceQuestionReq {
-    db.ChoiceQuestion.Type type = 1;
-    string description = 2;
-    db.ChoiceQuestion.Option single_answser = 3; // 单选答案
-    repeated db.ChoiceQuestion.Option multiple_answser = 4; // 多选答案
-    repeated db.ChoiceQuestion.Content contents = 5; // 题目内容
-}
-
-message CreateChoiceQuestionResp {
-    db.ChoiceQuestion choice_question = 1;
-}
-
-message GetChoiceQuestionReq {
-    int32 q_id = 1;
-}
-
-message GetChoiceQuestionResp {
-    db.ChoiceQuestion choice_question = 1;
-}
-
-message ListChoiceQuestionReq {
-    message Filters {
-        int32 q_id = 1;
-        string description = 2;
-        db.ChoiceQuestion.Type type = 3;
-    }
-    int32 current = 1;
-    int32 page_size = 2;
-    Filters filters = 3;
-}
-
-message ListChoiceQuestionResp {
-    int32 total = 1;
-    repeated db.ChoiceQuestion data = 2;
-}
-
-// --- judge question ---
-message CreateJudgeQuestionReq {
-    string description = 1;
-    bool answser = 2;
-}
-
-message CreateJudgeQuestionResp {
-    db.JudgeQuestion judge_question = 1;
-}
-
-message GetJudgeQuestionReq {
-    int32 q_id = 1;
-}
-
-message GetJudgeQuestionResp {
-    db.JudgeQuestion judge_question = 1;
-}
-
-message ListJudgeQuestionReq {
-    message Filters {
-        int32 q_id = 1;
-        string description = 2;
-    }
-    int32 current = 1;
-    int32 page_size = 2;
-    Filters filters = 3;
-}
-
-message ListJudgeQuestionResp {
-    int32 total = 1;
-    repeated db.JudgeQuestion data = 2;
-}
-
 // --- exam ---
 message CreateExamPaperReq {
     string title = 1;
-    repeated int32 judge_id_list = 2;
-    repeated int32 choice_id_list = 3;
+    repeated int32 q_id_list = 2;
 }
 
 message CreateExamPaperResp {
@@ -125,14 +54,20 @@ message GetExamPaperReq {
 
 message GetExamPaperResp {
     db.ExamPaper exam_paper = 1;
-    repeated db.JudgeQuestion judge_questions = 2;
-    repeated db.ChoiceQuestion choice_questions = 3;
+    repeated db.Question questions = 2;
 }
 
 message ListExamPaperReq {
-    repeated int32 exam_id_list = 1;
+    message Filters {
+        int32 e_id = 1;
+        string title = 2;
+    }
+    int32 current = 1;
+    int32 page_size = 2;
+    Filters filters = 3;
 }
 
 message ListExamPaperResp {
-    map<int32, db.ExamPaper> exam_papers = 1;
+    int32 total = 1;
+    repeated db.ExamPaper data = 2;
 }

@@ -72,3 +72,15 @@ message ExamPaper {
     Status status = 6;
     repeated int32 q_id_list = 7; // 题目列表
 }
+
+message Contest {
+    string created_by = 1;
+    int32 creation_time = 2;
+    int32 modified_time = 3;
+
+    int32 cid = 4;
+    string title = 5;
+    int32 begin_time = 6;
+    int32 finish_time = 7;
+    Status status = 8;
+}

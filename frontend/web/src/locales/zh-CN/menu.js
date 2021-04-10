@@ -52,4 +52,6 @@ export default {
   'menu.question': '题目管理',
   'menu.question.list': '题目列表',
   'menu.question.create': '创建试题',
+  'menu.exam': '试卷管理',
+  'menu.contest': '考试管理',
 };

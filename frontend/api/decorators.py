@@ -7,6 +7,7 @@ from flask import jsonify, request, session
 from proto.api_pb2 import EmptyReq, EmptyResp, ErrorResp
 from google.protobuf import json_format
 from api.dal import get_mongo_client_dal
+from db.mysql_client import create_or_get_mysql_client
 
 
 def inject(mysql=False, mongo=False, user_name=False):
@@ -14,7 +15,7 @@ def inject(mysql=False, mongo=False, user_name=False):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             if mysql:
-                kwargs['mysql_client'] = 'mysql_client'
+                kwargs['mysql_client'] = create_or_get_mysql_client()
             if mongo:
                 kwargs['mongo_client'] = get_mongo_client_dal()
             if user_name:
@@ -81,3 +82,11 @@ def api_proto(req_proto, resp_proto):
             return to_json_resp(code, resp_msg, is_pb2)
         return wrapper
     return api_proto_inner
+
+
+def get_user_name():
+    user_name = session.get('username', None)
+    if user_name:
+        return user_name
+
+    return 'admin'

@@ -8,19 +8,22 @@ _Base = declarative_base()
 
 class UserOrm(_Base):
     __tablename__ = 'user'
-    id = Column(String, primary_key=True)
+    uid = Column(BigInteger, primary_key=True)
     name = Column(String)
     role = Column(Integer)
+    password = Column(String)
 
     def __init__(self, record):
         super(UserOrm, self).__init__()
-        self.id = record.id
+        self.uid = record.uid
         self.name = record.name
         self.role = record.role
+        self.password = record.password
 
     def to_record(self):
         record = User()
-        record.id = self.id
+        record.uid = self.uid
         record.name = self.name
         record.role = self.role
+        record.password = self.password
         return record

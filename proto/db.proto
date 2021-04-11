@@ -17,8 +17,9 @@ message User {
         TEACHER = 3;
     }
     Role role = 1; // 角色
-    string id = 2;  // 学号
+    int64 uid = 2;  // 学号
     string name = 3; // 姓名
+    string password = 4;
 }
 
 message Question {

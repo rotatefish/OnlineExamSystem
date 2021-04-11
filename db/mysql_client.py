@@ -162,20 +162,16 @@ class MysqlClient(object):
         return tuple_return_inner
 
     @inject_session
-    def create_user(self, sess, id, name, role):
+    def create_user(self, sess, uid, name, role, password):
         record = User()
-        record.id = id
+        record.uid = uid
         record.name = name
         record.role = role
-        print(id, name, role)
+        record.password = password
         helper.create_row(sess, UserOrm(record))
+        return record
 
     @inject_session
-    def get_user(self, sess, id, name, role):
-        record = User()
-        record.id = id
-        record.name = name
-        record.role = role
-        print(id, name, role)
-        orm = sess.query(UserOrm).filter(UserOrm.name == name).one()
+    def get_user_by_id(self, sess, uid):
+        orm = sess.query(UserOrm).filter(UserOrm.uid == uid).one()
         return orm.to_record()

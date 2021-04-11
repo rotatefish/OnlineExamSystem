@@ -6,7 +6,7 @@ from db.mongo_client import MyMongoClient
 
 __LOCK = threading.Lock()
 __MONGO_CLIENT = None
-
+__MYSQL_CLIENT = None
 
 def get_mongo_client_dal():
     global __MONGO_CLIENT, __LOCK

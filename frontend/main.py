@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, request, session
 
 from api.user import user
@@ -8,9 +10,10 @@ from api.question import question
 def create_flask_app():
 
     flask_app = Flask(__name__)
+    flask_app.secret_key = 'test'
+
 
     api_prefix = '/api/v1'
-
     module_list = [
         user,
         exam,

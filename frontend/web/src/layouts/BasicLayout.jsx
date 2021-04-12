@@ -100,6 +100,7 @@ const BasicLayout = (props) => {
   return (
     <ProLayout
       logo={logo}
+      menu={{defaultOpenAll: true}}
       formatMessage={formatMessage}
       {...props}
       {...settings}

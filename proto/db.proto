@@ -16,10 +16,18 @@ message User {
         STUDENT = 2;
         TEACHER = 3;
     }
-    Role role = 1; // 角色
-    int64 uid = 2;  // 学号
-    string name = 3; // 姓名
-    string password = 4;
+    enum Gender {
+        NONE = 0;
+        MALE = 1;
+        FEMALE = 2;
+    }
+    int64 user_id = 1;  // 学号
+    string name = 2; // 姓名
+    Role role = 3; // 角色
+    string email = 4;
+    string avatar = 5;
+    Gender gender = 6;
+    string password = 7;
 }
 
 message Question {

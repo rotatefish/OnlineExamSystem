@@ -1,34 +1,18 @@
 import sys
 import os
 import json
+import time
 
 from http import HTTPStatus
 from flask import Blueprint, session, request
 from gen.proto import api_pb2, db_pb2
-from api.decorators import api_proto, inject, get_user_name
+from api.decorators import api_proto, inject, get_user_name, login_required
 from gen.proto.api_pb2 import ErrorResp, EmptyReq, EmptyResp
-
+from api.auth import Auth
 
 from google.protobuf import json_format, text_format
 
 user = Blueprint('user', __name__)
-
-
-@user.route('/user/login', methods=['POST'])
-@api_proto(api_pb2.LoginReq,
-           api_pb2.LoginResp)
-@inject(mysql=True)
-def user_login(req, mysql_client):
-    err, user = mysql_client.get_user_by_id(req.uid)
-    if err:
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="error")
-    if user.password != req.password:
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="wrong password")
-
-    session['username'] = user.name
-    session['uid'] = user.uid
-
-    return HTTPStatus.OK, api_pb2.GetUserInfoResp(user=user)
 
 
 @user.route('/user/register', methods=['POST'])
@@ -38,33 +22,82 @@ def user_login(req, mysql_client):
 def user_register(req, mysql_client):
 
     role = db_pb2.User.Role.ADMIN
-    err, user = mysql_client.create_user(req.uid,
-                                         req.name,
-                                         role,
-                                         req.password)
+    gender = db_pb2.User.Gender.MALE
+    avatar = 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png'
+
+    err, user = mysql_client.create_user(user_id=req.user_id,
+                                         name=req.name,
+                                         role=role,
+                                         email=req.email,
+                                         avatar=avatar,
+                                         gender=gender,
+                                         password=req.password)
     if err:
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="error")
-    return HTTPStatus.OK, ErrorResp(err_msg="debug")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="注册失败")
+    return HTTPStatus.OK, api_pb2.RegisterResp(user=user)
 
 
-@user.route('/user/current', methods=['POST'])
+@user.route('/user/login', methods=['POST'])
+@api_proto(api_pb2.LoginReq,
+           api_pb2.LoginResp)
+@inject(mysql=True)
+def user_login(req, mysql_client):
+    err, user = mysql_client.get_user_by_id(req.user_id)
+    if err:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="用户未注册")
+
+    if user.password != req.password:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="密码错误")
+
+    login_time = int(time.time())
+    token = Auth.encode_auth_token(req.user_id, login_time)
+    session['user_name'] = user.name
+    session['user_id'] = user.user_id
+    return HTTPStatus.OK, api_pb2.LoginResp(token=token)
+
+
+@user.route('/user/logout', methods=['POST'])
+@api_proto(api_pb2.LogoutReq,
+           api_pb2.LogoutResp)
+@inject(mysql=True, user_id=True)
+def user_logout(req, mysql_client, user_id):
+    if not user_id:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="用户未登录") 
+    err, user = mysql_client.get_user_by_id(user_id)
+    if err:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="用户未注册")
+
+    session.clear()
+    return HTTPStatus.OK, api_pb2.LogoutResp()
+
+
+@user.route('/user/current', methods=['GET', 'POST'])
 @api_proto(api_pb2.EmptyReq,
-           api_pb2.fetchCurrentUserResp)
-@inject(mysql=True)
-def fetch_current_user(req, mysql_client):
+           api_pb2.CurrentUserResp)
+@inject(mysql=True, user_name=True, user_id=True)
+def fetch_current_user(req, mysql_client, user_name, user_id):
 
-    username = get_user_name()
-    return HTTPStatus.OK, api_pb2.fetchCurrentUserResp(name=username)
+    if not user_id:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg='用户未登录')
+    err, user = mysql_client.get_user_by_id(user_id)
+    if err:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg='用户未登录')
+
+    return HTTPStatus.OK, api_pb2.CurrentUserResp(name=user_name,
+                                                  user_id=user_id,
+                                                  avatar=user.avatar,
+                                                  email=user.email,
+                                                  role=user.role,
+                                                  gender=user.gender)
 
 
-
-@user.route('/user/get', methods=['POST'])
-@api_proto(api_pb2.GetUserInfoReq,
-           api_pb2.GetUserInfoResp)
-@inject(mysql=True)
+@ user.route('/user/get', methods=['POST'])
+@ api_proto(api_pb2.GetUserInfoReq,
+            api_pb2.GetUserInfoResp)
+@ inject(mysql=True)
 def get_user_info(req, mysql_client):
 
-    err, user = mysql_client.get_user_by_id(req.uid)
+    err, user = mysql_client.get_user_by_id(req.user_id)
     if err:
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="error")
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="找不到该用户")
     return HTTPStatus.OK, api_pb2.GetUserInfoResp(user=user)

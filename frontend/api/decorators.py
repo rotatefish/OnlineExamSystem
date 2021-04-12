@@ -2,15 +2,17 @@ import functools
 import flask
 import json
 import traceback
+import time
+import datetime
 
 from flask import jsonify, request, session
 from proto.api_pb2 import EmptyReq, EmptyResp, ErrorResp
 from google.protobuf import json_format
 from api.dal import get_mongo_client_dal
 from db.mysql_client import create_or_get_mysql_client
+from api.auth import Auth
 
-
-def inject(mysql=False, mongo=False, user_name=False):
+def inject(mysql=False, mongo=False, user_name=False, user_id=False):
     def inject_inner(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -19,8 +21,9 @@ def inject(mysql=False, mongo=False, user_name=False):
             if mongo:
                 kwargs['mongo_client'] = get_mongo_client_dal()
             if user_name:
-                kwargs['user_name'] = 'user_name'
-
+                kwargs['user_name'] = get_user_name()
+            if user_id:
+                kwargs['user_id'] = get_user_id()
             return f(*args, **kwargs)
         return wrapper
     return inject_inner
@@ -84,9 +87,37 @@ def api_proto(req_proto, resp_proto):
     return api_proto_inner
 
 
+def login_required(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        """
+        用户鉴权
+        :return: list
+        """
+        auth_token = request.headers.get('JWT')
+        if not auth_token:
+            return to_err_resp(500, '没有JWT Token')
+
+        auth_token = auth_token.strip()
+        payload = Auth.decode_auth_token(auth_token)
+        current_time = int(time.time())
+        exp = payload['exp']
+        if current_time > exp:
+            return to_err_resp(500, 'JWT Token 过期')
+
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def get_user_name():
-    user_name = session.get('username', None)
+    user_name = session.get('user_name', None)
     if user_name:
         return user_name
 
-    return 'admin'
+    return None
+
+def get_user_id():
+    user_id = session.get('user_id', None)
+    if user_id:
+        return user_id
+    return None

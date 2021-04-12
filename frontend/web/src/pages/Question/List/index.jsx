@@ -130,7 +130,6 @@ class QuestionList extends PureComponent {
   }
 
   getQuestionList = (params, sort, filters) => {
-    console.log(params);
     const resp = this.props.dispatch({
       type: 'question/listAllQuestions',
       payload: {

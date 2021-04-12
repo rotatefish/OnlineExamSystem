@@ -11,7 +11,7 @@ from pprint import pprint
 from proto.api_pb2 import EmptyReq, EmptyResp, ErrorResp
 from proto import db_pb2
 from proto import api_pb2
-from api.decorators import api_proto, inject
+from api.decorators import api_proto, inject, login_required
 
 
 question = Blueprint('question', __name__)

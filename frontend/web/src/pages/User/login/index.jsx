@@ -34,8 +34,8 @@ const Login = (props) => {
   const handleSubmit = (values) => {
     const { dispatch } = props;
     dispatch({
-      type: 'login/login',
-      payload: { ...values, type },
+      type: 'user/login',
+      payload: { ...values },
     });
   };
 
@@ -54,6 +54,9 @@ const Login = (props) => {
               width: '100%',
             },
           },
+        }}
+        onValuesChange={(values) => {
+          console.log(values);
         }}
         onFinish={(values) => {
           handleSubmit(values);
@@ -87,7 +90,7 @@ const Login = (props) => {
         )}
         {type === 'account' && (
           <>
-            <ProFormText
+            {/* <ProFormText
               name="userName"
               fieldProps={{
                 size: 'large',
@@ -106,6 +109,20 @@ const Login = (props) => {
                       defaultMessage="请输入用户名!"
                     />
                   ),
+                },
+              ]}
+            /> */}
+            <ProFormText
+              name="userId"
+              fieldProps={{
+                size: 'large',
+                prefix: <UserOutlined className={styles.prefixIcon} />,
+              }}
+              placeholder={'学号'}
+              rules={[
+                {
+                  required: true,
+                  message: "请输入学号!"
                 },
               ]}
             />

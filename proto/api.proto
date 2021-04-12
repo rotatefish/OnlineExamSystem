@@ -73,18 +73,28 @@ message ListExamPaperResp {
 }
 
 message LoginReq {
-    int64 uid = 1;
+    int64 user_id = 1;
     string password = 2;
+    bool auto_login = 3;
 }
 
 message LoginResp {
-    db.User user = 1;
+    string token = 1;
+}
+
+message LogoutReq {
+    int64 user_id = 1;
+}
+
+message LogoutResp {
+
 }
 
 message RegisterReq {
-    int64 uid = 1;
+    int64 user_id = 1;
     string name = 2;
-    string password = 3;
+    string email = 3;
+    string password = 4;
 }
 
 message RegisterResp {
@@ -92,13 +102,18 @@ message RegisterResp {
 }
 
 message GetUserInfoReq {
-    int64 uid = 1;
+    int64 user_id = 1;
 }
 
 message GetUserInfoResp {
     db.User user = 1;
 }
 
-message fetchCurrentUserResp {
+message CurrentUserResp {
     string name = 1;
+    string avatar = 2;
+    string email = 3;
+    int64 user_id = 4;
+    db.User.Role role = 5;
+    db.User.Gender gender = 6;
 }

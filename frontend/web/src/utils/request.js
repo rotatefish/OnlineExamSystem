@@ -22,7 +22,12 @@ const codeMessage = {
 
 const errorHandler = (error) => {
   const { response } = error;
-
+  response.json().then(data => {
+    notification.error({
+      message: `客户端请求错误`,
+      description: data.errMsg,
+    });
+  });
   if (response && response.status) {
     const errorText = codeMessage[response.status] || response.statusText;
     const { status, url } = response;
@@ -45,5 +50,8 @@ const request = extend({
   errorHandler,
   // 默认错误处理
   credentials: 'include', // 默认请求是否带上cookie
+  headers: {
+    JWT: localStorage.getItem('JWT'),
+  }
 });
 export default request;

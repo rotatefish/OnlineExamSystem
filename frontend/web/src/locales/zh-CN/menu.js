@@ -54,4 +54,5 @@ export default {
   'menu.question.create': '创建试题',
   'menu.exam': '试卷管理',
   'menu.contest': '考试管理',
+  'menu.userList': '用户管理',
 };

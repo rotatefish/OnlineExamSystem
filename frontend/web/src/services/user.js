@@ -29,3 +29,10 @@ export async function userLogout(params) {
 export async function currentUser() {
   return request('/api/v1/user/current');
 }
+
+export async function queryAllUser(params) {
+  return request('/api/v1/user/list', {
+    method: 'POST',
+    data: params
+  });
+}

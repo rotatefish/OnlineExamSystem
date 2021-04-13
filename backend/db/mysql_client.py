@@ -6,6 +6,7 @@ import time
 import json
 import sqlalchemy
 
+from sqlalchemy import and_, or_
 from collections import defaultdict
 from db import mysql_helper as helper
 from db.orm import UserOrm
@@ -97,29 +98,40 @@ class MysqlClient(object):
             connect_pool_max_overflow)
 
     def inject_session(f):
+        """
+        Decorator that inject session into method f's parameter list.
+        The wrapper will use try-except to catch exception raised by f.
+        If no exception raised, return (ErrorCode.OK, f_return_value)
+        Otherwise, return (ErrorCode.OK, None)
+        If session is passed by from the caller, the wrapper
+          will not do the commit
+        """
+
         @functools.wraps(f)
         def wrapper(self, *args, **kwargs):
 
             def log_exc(e):
-                logging.warning(
-                    'Error at mysql client method {}: {}'.format(f.__name__, e))
+                logging.warning('Error at mysql client method "%s": %s' % (
+                    f.__name__, e))
                 if args:
-                    logging.warning('agrs: {}'.format(str(args)))
+                    logging.warning('args: %s' % str(args))
                 if kwargs:
-                    logging.warning('kwargs: {}'.format(str(kwargs)))
+                    logging.warning('kwargs: %s' % str(kwargs))
                 code = to_error_code(e)
                 if code == ErrorCode.UNKNOWN:
+                    # print the trace if we don't know what it is
                     traceback.print_exc()
                 return code
 
             auto_commit = True
             session = None
-            if len(args) > 0 and isinstance(args[0], sqlalchemy.orm.session.Session):
+            if len(args) > 0 \
+                    and isinstance(args[0], sqlalchemy.orm.session.Session):
                 auto_commit = False
                 session = args[0]
                 args = args[1:]
             else:
-                session = self.session_factory
+                session = self.session_factory()
             if auto_commit:
                 try:
                     result = f(self, session, *args, **kwargs)
@@ -148,6 +160,17 @@ class MysqlClient(object):
         return wrapper
 
     def return_tuple(num):
+        """
+        If a method return a tuple of lenth num and decorated by
+        inject_session. It's return value will become (error_code, (a, b, c)).
+        This decorator decorate the method again and make the return value
+        like:
+          (error_code, a, b, c) when succeed.
+          (error_code, None, None, None) when error happen.
+
+        Args:
+          num: The num of elements in returned tuple for origin function.
+        """
         def tuple_return_inner(f):
             @functools.wraps(f)
             def wrapper(self, *args, **kwargs):
@@ -177,5 +200,32 @@ class MysqlClient(object):
 
     @inject_session
     def get_user_by_id(self, sess, user_id):
-        orm = sess.query(UserOrm).filter(UserOrm.user_id == user_id).one()
-        return orm.to_record()
+        return helper.read_single(
+            sess, UserOrm, UserOrm.user_id == user_id).to_record()
+
+    @return_tuple(2)
+    @inject_session
+    def query_all_user(self, sess, offset=None, limit=None,
+                       user_id=None, name=None, role=None, gender=None):
+        filter_list = []
+        filter_expr = None
+        if user_id:
+            filter_list.append(UserOrm.user_id == user_id)
+        if name:
+            filter_list.appene('%{}%'.format(name))
+        if role:
+            filter_list.append(UserOrm.role == role)
+        if gender:
+            filter_list.append(UserOrm.gender == gender)
+        if filter_list:
+            filter_expr = and_(*filter_list)
+        total = helper.get_count(sess, UserOrm, filter_expr)
+        rows = helper.read_multiple(sess,
+                                    UserOrm,
+                                    filter_expr=filter_expr,
+                                    order_by=UserOrm.user_id.desc(),
+                                    offset=offset,
+                                    limit=limit)
+        results = [x.to_record() for x in rows]
+        return total, results
+

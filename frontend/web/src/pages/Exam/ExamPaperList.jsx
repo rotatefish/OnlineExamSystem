@@ -1,7 +1,7 @@
 import { PageContainer } from '@ant-design/pro-layout';
 import React, { useState, useEffect, PureComponent } from 'react';
 import { Spin } from 'antd';
-import styles from './index.less';
+import styles from './ExamPaperList.less';
 import ProCard from '@ant-design/pro-card';
 import ProTable from '@ant-design/pro-table';
 import { filter } from 'lodash-es';
@@ -15,7 +15,7 @@ import moment from 'moment';
 @connect(({ exam }) => ({
   exam
 }))
-class ExamList extends PureComponent {
+class ExamPaperList extends PureComponent {
 
   columns = [
     {
@@ -116,4 +116,4 @@ class ExamList extends PureComponent {
   }
 }
 
-export default ExamList;
+export default ExamPaperList;

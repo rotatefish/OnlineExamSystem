@@ -84,12 +84,13 @@ message ExamPaper {
 
 message Contest {
     string created_by = 1;
-    int32 creation_time = 2;
-    int32 modified_time = 3;
+    int64 creation_time = 2;
+    int64 modified_time = 3;
 
-    int32 cid = 4;
-    string title = 5;
-    int32 begin_time = 6;
-    int32 finish_time = 7;
-    Status status = 8;
+    int32 cid = 4; // primary key
+    int32 eid = 5;
+    Status status = 6;
+    int64 begin_time = 7;
+    int64 finish_time = 8;
+    
 }

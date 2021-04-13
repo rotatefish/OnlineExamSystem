@@ -117,3 +117,32 @@ message CurrentUserResp {
     db.User.Role role = 5;
     db.User.Gender gender = 6;
 }
+
+message QueryAllUserReq {
+    message Filters {
+        int64 user_id = 1;
+        string name = 2;
+        db.User.Role role = 3;
+        db.User.Gender gender = 4;
+    }
+    int32 current = 1;
+    int32 page_size = 2;
+    Filters filters = 3;
+}
+
+message QueryAllUserResp {
+    int32 total = 1;
+    repeated db.User data = 2;
+}
+
+
+// contest 相关
+message CreateContestReq {
+    int32 eid = 1;
+    int32 begin_time = 2;
+    int32 finish_time = 3;
+}
+
+message CreateContestResp {
+
+}

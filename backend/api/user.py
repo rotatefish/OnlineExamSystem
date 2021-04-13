@@ -62,7 +62,7 @@ def user_login(req, mysql_client):
 @inject(mysql=True, user_id=True)
 def user_logout(req, mysql_client, user_id):
     if not user_id:
-        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="用户未登录") 
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="用户未登录")
     err, user = mysql_client.get_user_by_id(user_id)
     if err:
         return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="用户未注册")
@@ -91,13 +91,35 @@ def fetch_current_user(req, mysql_client, user_name, user_id):
                                                   gender=user.gender)
 
 
-@ user.route('/user/get', methods=['POST'])
-@ api_proto(api_pb2.GetUserInfoReq,
-            api_pb2.GetUserInfoResp)
-@ inject(mysql=True)
+@user.route('/user/get', methods=['POST'])
+@api_proto(api_pb2.GetUserInfoReq,
+           api_pb2.GetUserInfoResp)
+@inject(mysql=True)
 def get_user_info(req, mysql_client):
 
     err, user = mysql_client.get_user_by_id(req.user_id)
     if err:
         return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="找不到该用户")
     return HTTPStatus.OK, api_pb2.GetUserInfoResp(user=user)
+
+
+@user.route('/user/list', methods=['GET', 'POST'])
+@api_proto(api_pb2.QueryAllUserReq,
+           api_pb2.QueryAllUserResp)
+@inject(mysql=True)
+def query_all_user(req, mysql_client):
+
+    limit = 10 if req.page_size < 1 or req.page_size > 100 else req.page_size
+    offset = ((1 if req.current < 1 else req.current) - 1) * limit
+
+    err, total, users = mysql_client.query_all_user(offset=offset,
+                                                    limit=limit,
+                                                    user_id=req.filters.user_id,
+                                                    name=req.filters.name,
+                                                    role=req.filters.role,
+                                                    gender=req.filters.gender)
+
+    if err:
+        return HTTPStatus.BAD_REQUEST, ErrorResp(err_msg="找不到该用户")
+    return HTTPStatus.OK, api_pb2.QueryAllUserResp(total=total,
+                                                   data=users)

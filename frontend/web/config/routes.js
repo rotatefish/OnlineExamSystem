@@ -50,12 +50,6 @@ export default [
                                 ],
                             },
                             {
-                                name: 'list.table-list',
-                                icon: 'table',
-                                path: '/list',
-                                component: './TableList',
-                            },
-                            {
                                 path: '/question',
                                 name: 'question',
                                 icon: 'crown',
@@ -64,13 +58,13 @@ export default [
                                         name: 'list',
                                         icon: 'smile',
                                         path: '/question/list',
-                                        component: './Question/List',
+                                        component: './Question/List/QuestionList',
                                     },
                                     {
                                         name: 'create',
                                         icon: 'smile',
                                         path: '/question/create',
-                                        component: './Question/Create',
+                                        component: './Question/Create/CreateChoiceQuestion',
                                     },
                                 ],
                             },
@@ -88,6 +82,10 @@ export default [
                                         path: '/exam/detail',
                                         component: './Exam/ExamPaperDetail',
                                     },
+                                    {
+                                        path: '/exam/create',
+                                        component: './Exam/CreateExamPaper',
+                                    },
                                 ]
                             },
                             {
@@ -100,6 +98,18 @@ export default [
                                         component: './Contest/ContestList'
                                     },
                                 ]
+                            },
+                            {
+                                name: 'userList',
+                                path: '/userList',
+                                icon: 'smile',
+                                component: './User/UserList'
+                            },
+                            {
+                                name: 'list.table-list',
+                                icon: 'table',
+                                path: '/list',
+                                component: './TableList',
                             },
                             {
                                 component: './404',

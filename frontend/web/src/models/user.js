@@ -4,6 +4,7 @@ import {
   userLogin,
   userLogout,
   currentUser,
+  queryAllUser,
 } from '@/services/user';
 import { history } from 'umi';
 import { message } from 'antd';
@@ -82,6 +83,11 @@ const UserModel = {
         });
       }
     },
+    *queryAllUser({ payload }, { call, put }) {
+      const response = yield call(queryAllUser, payload);
+
+      return response;
+    }
   },
   reducers: {
     saveCurrentUser(state, action) {
